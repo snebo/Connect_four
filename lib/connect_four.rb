@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# TODO: check lines of code
+# FIXME: find the rouge or missing end annonation
+
 require_relative './player'
 
 # ConnectFour four constructor class
@@ -94,6 +97,9 @@ class ConnectFour
   def check_win?
     # check win dioganally, horizontally, vertically
     new_arr = []
+    # horizontal_check = false
+    # vetical_check = false
+    # diogonal_check = false
     # horizontally
     for i in 0..6
       for j in 0..6
@@ -109,6 +115,7 @@ class ConnectFour
     end
 
     # vertically
+    new_arr = []
     for i in 0..6
       for j in 0..6
         if new_arr.length >= 4
@@ -122,7 +129,80 @@ class ConnectFour
       end
     end
 
+    # diagonal check
+    traverse_board_diagonal? ? (return true) : nil
+
     return false
+  end
+
+  def traverse_board_diagonal?(board)
+    # getting the size of the matrix
+    row = board.length
+    col = board[0].length
+    i = 3
+    new_arr = []
+    prev_value = ''
+    flag = false
+
+    while i < col
+      j = i
+      while j >= 0 && (i - j < row) 
+        print(" #{board[i-j][j]}")
+        # add to array
+        if flag
+          if board[i-j][j] == prev_value
+            new_arr << board[i-j][j]
+          else
+            new_arr = []
+          end
+        else
+          new_arr << board[i-j][j]
+          flag = true
+        end
+        if new_arr.length >= 4
+          puts 'round win!!!'
+          return true
+        end
+        prev_value = board[i-j][j]
+        j -= 1
+      end
+      puts "\nnew_arr = #{new_arr}"
+      puts ''
+      flag = false
+      i += 1
+    end
+
+    puts "value is now #{i} and row is #{row}"
+    i = 1
+    flag = false
+    while i < row - 3
+      j = col - 1
+      k = i
+      while j.positive? && k < row
+        print(" #{board[k][j]}")
+        if flag
+          if board[k][j] == prev_value
+            new_arr << board[k][j]
+          else
+            new_arr = []
+          end
+        else
+          new_arr << board[k][j]
+          flag = true
+        end
+        if new_arr.length == 4
+          puts 'round win!!!'
+          return true
+        end
+        prev_value = board[k][j]
+        j -= 1
+        k += 1
+      end
+      puts "\nnew_arr = #{new_arr}"
+      puts ''
+      flag = false
+      i += 1
+    end
   end
 
   def convert_choice(value)
@@ -200,5 +280,15 @@ class ConnectFour
   end
 end
 
-# game = ConnectFour.new
+game = ConnectFour.new
+exm_board = [
+      [10, 11, 12, 13, 14, 23, 12],
+      [15, 16, 17, 18, 19, 64, 11],
+      [20, 21, 22, 23, 24, 64, 64],
+      [25, 26, 27, 28, 29, 64, 41],
+      [30, 31, 32, 33, 64, 26, 91],
+      [20, 21, 22, 64, 24, 64, 64],
+      [10, 11, 34, 64, 14, 23, 12]
+]
 # game.draw_board(board = Array.new(7) {Array.new(7, 'a')})
+game.traverse_board_diagonal?(exm_board)
