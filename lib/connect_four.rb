@@ -130,12 +130,79 @@ class ConnectFour
     end
 
     # diagonal check
-    traverse_board_diagonal? ? (return true) : nil
+    traverse_board_diagonal_left? ? (return true) : nil
+    traverse_board_diagonal_right? ? (return true): nil
 
-    return false
+    false
   end
 
-  def traverse_board_diagonal?(board)
+  def traverse_board_diagonal_right?(board = @board)
+    # define the size of the matrix
+    row = board.length
+    col = board[0].length
+    i = 3
+    new_arr = []
+    prev_value = ''
+    flag = false
+
+    while i >= 0
+      j = 0
+      k = i
+      while j < row && (k < col) 
+        # print(" #{board[j][k]}")
+        # add to array
+        if flag
+          if board[j][k] == prev_value
+            new_arr << board[j][k]
+          else
+            new_arr = []
+          end
+        else
+          new_arr << board[j][k]
+          flag = true
+        end
+        if new_arr.length >= 4
+          puts 'round win!!!'
+          return true
+        end
+        prev_value = board[j][k]
+        j += 1
+        k += 1
+      end
+      # puts "\nnew_arr = #{new_arr}"
+      # puts ''
+      flag = false
+      i -= 1
+    end
+
+    i = 3 # where the valid count starts
+    while i.positive?
+      j = i
+      k = 0
+      while j < row && k < col
+        # print(" #{board[j][k]}")
+        if flag
+          board[j][k] == prev_value ? new_arr << board[j][k] : new_arr = []
+        else
+          new_arr << board[j][k]
+          flag = true
+        end
+        if new_arr.length == 4
+          puts 'round win!!'
+        end
+        # set next iteration
+        prev_value = board[j][k]
+        j += 1
+        k += 1
+      end
+      # puts "\nnew_arr = #{new_arr}"
+      # puts ''
+      flag = false
+      i -= 1
+    end
+  end
+
+  def traverse_board_diagonal_left?(board)
     # getting the size of the matrix
     row = board.length
     col = board[0].length
@@ -147,7 +214,7 @@ class ConnectFour
     while i < col
       j = i
       while j >= 0 && (i - j < row) 
-        print(" #{board[i-j][j]}")
+        # print(" #{board[i-j][j]}")
         # add to array
         if flag
           if board[i-j][j] == prev_value
@@ -163,29 +230,23 @@ class ConnectFour
           puts 'round win!!!'
           return true
         end
-        prev_value = board[i-j][j]
+        prev_value = board[i - j][j]
         j -= 1
       end
-      puts "\nnew_arr = #{new_arr}"
-      puts ''
+      # puts "\nnew_arr = #{new_arr}"
+      # puts ''
       flag = false
       i += 1
     end
 
-    puts "value is now #{i} and row is #{row}"
     i = 1
-    flag = false
     while i < row - 3
       j = col - 1
       k = i
       while j.positive? && k < row
-        print(" #{board[k][j]}")
+        # print(" #{board[k][j]}")
         if flag
-          if board[k][j] == prev_value
-            new_arr << board[k][j]
-          else
-            new_arr = []
-          end
+          board[k][j] == prev_value ? new_arr << board[k][j] : new_arr = []
         else
           new_arr << board[k][j]
           flag = true
@@ -194,12 +255,13 @@ class ConnectFour
           puts 'round win!!!'
           return true
         end
+        # set next iteration
         prev_value = board[k][j]
         j -= 1
         k += 1
       end
-      puts "\nnew_arr = #{new_arr}"
-      puts ''
+      # puts "\nnew_arr = #{new_arr}"
+      # puts ''
       flag = false
       i += 1
     end
@@ -286,9 +348,9 @@ exm_board = [
       [15, 16, 17, 18, 19, 64, 11],
       [20, 21, 22, 23, 24, 64, 64],
       [25, 26, 27, 28, 29, 64, 41],
-      [30, 31, 32, 33, 64, 26, 91],
-      [20, 21, 22, 64, 24, 64, 64],
-      [10, 11, 34, 64, 14, 23, 12]
+      [30, 31, 26, 33, 64, 26, 91],
+      [20, 21, 22, 26, 24, 64, 64],
+      [10, 11, 34, 64, 26, 23, 12]
 ]
 # game.draw_board(board = Array.new(7) {Array.new(7, 'a')})
-game.traverse_board_diagonal?(exm_board)
+game.traverse_board_diagonal_right?(exm_board)
