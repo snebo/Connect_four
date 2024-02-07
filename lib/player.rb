@@ -4,7 +4,7 @@
 class Player
   attr_accessor :positions, :score, :name, :symbol
 
-  def initialize(name, symbol = Symbol.choose_sym, positions = [], score = 0 )
+  def initialize(name, symbol = choose_sym, positions = [], score = 0 )
     @name = name
     @symbol = symbol
     @positions = positions
@@ -13,11 +13,9 @@ class Player
 end
 
 # creates a symbol (icon) for the player
-class Symbol
-  def choose_sym
-    # create an array of symbols and use rand to choose one of the array items
-    symbols = %w[@ $ # & = + A X O M]
-    choice = symbols[rand(0..symbols.length-1)]
-    return choice
-  end
+def choose_sym
+  # create an array of symbols and use rand to choose one of the array items
+  symbols = %w[@ $ # & = + A X O M]
+  choice = symbols[rand(0..symbols.length-1)]
+  return choice
 end

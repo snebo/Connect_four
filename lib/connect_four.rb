@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-# TODO: check lines of code
-# FIXME: find the rouge or missing end annonation
-
 require_relative './player'
 
 # ConnectFour four constructor class
@@ -48,14 +45,26 @@ class ConnectFour
   end
 
   def yes_or_no(question)
+    response = ''
     loop do
       print question
-      response = gets.chomp.downcase
-      break if response == 'y' || response == 'n'
+      response = gets.chomp.downcase.split('')
+      break if (response & ['y','n']).any?
 
       puts 'Not a valid response'
     end
-    response == 'y' ? (return true) : (return false)
+    response[0] == 'y' ? (return true) : (return false)
+  end
+
+  def play
+    welcome_message
+    create_players
+    first_round = false
+    while @playing
+      yes_or_no('Keep playing(y,n)? ') if first_round
+      first_round = true
+      game_round
+    end
   end
 
   def create_players
@@ -63,12 +72,22 @@ class ConnectFour
     print "\nEnter your name player one: "
     name1 = gets.chomp
     setsym = yes_or_no("\nDo you have a custom symbol (y,n)")
-    setsym ? sym1 = gets.chomp : sym1 = Symbol.choose_sym
+    if setsym
+      print "Enter your custom symbol: "
+      sym1 = gets.chomp
+    else
+      sym1 = choose_sym
+    end
 
     print "\nEnter your name player two: "
     name2 = gets.chomp
     setsym = yes_or_no("\nDo you have a custom symbol (y,n)")
-    setsym ? sym2 = gets.chomp : sym2 = Symbol.choose_sym
+    if setsym
+      print "Enter your custom symbol: "
+      sym2 = gets.chomp
+    else
+      sym2 = choose_sym
+    end
 
     # set player info
     @player1 = Player.new(name1, sym1)
@@ -79,6 +98,7 @@ class ConnectFour
     @turn = !@turn
     draw_board(@board)
     @turn ? play_turn(@player1) : play_turn(@player2)
+    @turn ? @player1.score += 1 : @player2.score += 1
   end
 
   def play_turn(player)
@@ -338,19 +358,9 @@ class ConnectFour
   def save_name
     puts "\nEnter a name for your save"
     name = gets.chomp
-    return name
+    name
   end
 end
 
 game = ConnectFour.new
-exm_board = [
-      [10, 11, 12, 13, 14, 23, 12],
-      [15, 16, 17, 18, 19, 64, 11],
-      [20, 21, 22, 23, 24, 64, 64],
-      [25, 26, 27, 28, 29, 64, 41],
-      [30, 31, 26, 33, 64, 26, 91],
-      [20, 21, 22, 26, 24, 64, 64],
-      [10, 11, 34, 64, 26, 23, 12]
-]
-# game.draw_board(board = Array.new(7) {Array.new(7, 'a')})
-game.traverse_board_diagonal_right?(exm_board)
+game.play
