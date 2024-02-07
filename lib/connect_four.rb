@@ -9,6 +9,7 @@ class ConnectFour
     @player1
     @player2
     @turn = true
+    @playing = true
   end
 
   def draw_board(board = @board)
@@ -28,6 +29,9 @@ class ConnectFour
     #     1   2   3   4   5   6   7
 
     # each spot is a 2d array, and is filled when the value is not nil
+    system('clc') || system('clear')
+    print "\n#{@player1.name}: #{@player1.score} ==========="
+    print "#{@player2.name}: #{player2.score}\n"
     row_count = %w[a b c d e f].reverse
     col_count = '    1   2   3   4   5   6   7'
     line = '  -----------------------------'
