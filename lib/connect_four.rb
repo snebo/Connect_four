@@ -73,6 +73,7 @@ class ConnectFour
       if @won
         yes_or_no('Keep playing(y,n)? ') ? break : nil
       @won = false
+      end
       game_round
     end
   end
