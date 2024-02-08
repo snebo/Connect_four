@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# FIXME: fix why the game returns win on ever play
+# TODO: change the Connectfour logic.
+# The way the game works is that the connect four is dropped in and drops to the
+# bottom of the board
+
 require_relative './player'
 
 # ConnectFour four constructor class
@@ -8,8 +13,9 @@ class ConnectFour
     @board = Array.new(7) { Array.new(7) }
     @player1
     @player2
-    @turn = true
+    @turn = false
     @playing = true
+    @won = false
   end
 
   def draw_board(board = @board)
@@ -30,8 +36,8 @@ class ConnectFour
 
     # each spot is a 2d array, and is filled when the value is not nil
     system('clc') || system('clear')
-    print "\n#{@player1.name}: #{@player1.score} ==========="
-    print "#{@player2.name}: #{@player2.score}\n"
+    print "\n#{@player1.name}: #{@player1.score} ===========    "
+    print "#{@player2.name}: #{@player2.score}\n\n"
     row_count = %w[a b c d e f].reverse
     col_count = '    1   2   3   4   5   6   7'
     line = '  -----------------------------'
@@ -51,7 +57,7 @@ class ConnectFour
   def yes_or_no(question)
     response = ''
     loop do
-      print question
+      print "#{question}: "
       response = gets.chomp.downcase.split('')
       break if (response & ['y','n']).any?
 
@@ -63,10 +69,10 @@ class ConnectFour
   def play
     welcome_message
     create_players
-    first_round = false
     while @playing
-      yes_or_no('Keep playing(y,n)? ') if first_round
-      first_round = true
+      if @won
+        yes_or_no('Keep playing(y,n)? ') ? break : nil
+      @won = false
       game_round
     end
   end
@@ -115,42 +121,60 @@ class ConnectFour
     # update board
     @board[choice[0]] [choice[1]] = player.symbol
     # check win
-    check_win?
+    check_win? ? @won = true : @won = false
   end
 
-  def check_win?
+  def check_win?(board = @board)
     # check win dioganally, horizontally, vertically
     new_arr = []
-    # horizontal_check = false
-    # vetical_check = false
-    # diogonal_check = false
-    # horizontally
+    flag = false
+    prev_value = ''
     for i in 0..6
       for j in 0..6
+        if flag
+          if board[i][j] == prev_value && !board[i][j].nil?
+            new_arr << board[i][j]
+          else
+            new_arr = []
+          end
+        else
+          new_arr << board[i][j]
+          flag = true
+        end
         if new_arr.length >= 4
+          puts 'horizontal check'
+          puts 'round win!!!'
           return true
         end
-        if board[i][j] == board[i][j+1]
-          new_arr << board[i][j]
-        else
-          new_arr = []
-        end
+        prev_value = board[i][j]
       end
+      flag = false
     end
 
     # vertically
+    flag = false
+    prev_value = ''
     new_arr = []
     for i in 0..6
       for j in 0..6
+        if flag
+          if board[j][i] == prev_value && !board[j][i].nil?
+            new_arr << board[j][i]
+          else
+            new_arr = []
+          end
+        else
+          new_arr << board[j][i]
+          flag = true
+        end
         if new_arr.length >= 4
+          puts 'vertical check'
+          puts 'round win!!!'
           return true
         end
-        if board[i][j] == board[i+1][j]
-          new_arr << board[i][j]
-        else
-          new_arr = []
-        end
+        prev_value = board[j][i]
       end
+      flag = false
     end
 
     # diagonal check
@@ -175,21 +199,23 @@ class ConnectFour
       while j < row && (k < col) 
         # print(" #{board[j][k]}")
         # add to array
+        current = board[j][k]
         if flag
-          if board[j][k] == prev_value
-            new_arr << board[j][k]
+          if current == prev_value && !board[j][k].nil?
+            new_arr << current
           else
             new_arr = []
           end
         else
-          new_arr << board[j][k]
+          new_arr << current
           flag = true
         end
         if new_arr.length >= 4
+          puts 'diagonal right check'
           puts 'round win!!!'
           return true
         end
-        prev_value = board[j][k]
+        prev_value = current
         j += 1
         k += 1
       end
@@ -205,17 +231,19 @@ class ConnectFour
       k = 0
       while j < row && k < col
         # print(" #{board[j][k]}")
+        current = board[j][k]
         if flag
-          board[j][k] == prev_value ? new_arr << board[j][k] : new_arr = []
+          current == prev_value && !board[j][k].nil? ? new_arr << current : new_arr = []
         else
-          new_arr << board[j][k]
+          new_arr << current
           flag = true
         end
         if new_arr.length == 4
+          puts 'diagonal right 2 check'
           puts 'round win!!'
         end
         # set next iteration
-        prev_value = board[j][k]
+        prev_value = current
         j += 1
         k += 1
       end
@@ -224,9 +252,10 @@ class ConnectFour
       flag = false
       i -= 1
     end
+    false
   end
 
-  def traverse_board_diagonal_left?(board)
+  def traverse_board_diagonal_left?(board = @board)
     # getting the size of the matrix
     row = board.length
     col = board[0].length
@@ -240,21 +269,23 @@ class ConnectFour
       while j >= 0 && (i - j < row) 
         # print(" #{board[i-j][j]}")
         # add to array
+        current = board[i-j][j]
         if flag
-          if board[i-j][j] == prev_value
-            new_arr << board[i-j][j]
+          if current == prev_value && !board[i-j][j].nil?
+            new_arr << current
           else
             new_arr = []
           end
         else
-          new_arr << board[i-j][j]
+          new_arr << current
           flag = true
         end
         if new_arr.length >= 4
+          puts 'diagonal left check'
           puts 'round win!!!'
           return true
         end
-        prev_value = board[i - j][j]
+        prev_value = current
         j -= 1
       end
       # puts "\nnew_arr = #{new_arr}"
@@ -269,13 +300,15 @@ class ConnectFour
       k = i
       while j.positive? && k < row
         # print(" #{board[k][j]}")
+        current = board[k][j]
         if flag
-          board[k][j] == prev_value ? new_arr << board[k][j] : new_arr = []
+          current == prev_value && !board[k][j].nil? ? new_arr << current : new_arr = []
         else
-          new_arr << board[k][j]
+          new_arr << current
           flag = true
         end
         if new_arr.length == 4
+          puts 'diagonal left 2 check'
           puts 'round win!!!'
           return true
         end
@@ -289,19 +322,20 @@ class ConnectFour
       flag = false
       i += 1
     end
+    false
   end
 
   def convert_choice(value)
     new_val = []
-    value = value.split('')
-    values = %w[a b c d e f]
+    values = %w[f e d c b a]
     # value = [values.index(value[0]), value[1]]
     new_val << values.index(value[0])
-    new_val << value[1]
+    new_val << value[1].to_i - 1
     new_val
   end
 
   def valid_slot(player)
+    choice = []
     loop do
       print "#{player.name} please choose a valid slot(a1, b2,...): "
       choice = gets.chomp
@@ -309,11 +343,11 @@ class ConnectFour
       if choice[0].match?(/[a-f]/) && choice[1].match?(/[1-7]/)
         check = convert_choice(choice)
         if @board[check[0]][check[1]].nil?
-          return choice
-          # break
+          break
         end
       end
     end
+    choice
   end
   
   def load_game
