@@ -422,9 +422,39 @@ class ConnectFour
     end
   end
 
+  def diagonal_check_left(board, limit = 3, new_arr = [], prev = '')
+    start_at = limit
+    while start_at < board[0].length
+      i = 0; j = start_at
+      while i < board.length && j >= 0
+        curr = board[i][j]
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+        
+        i += 1; j -= 1
+      end
+      prev = ''; start_at += 1
+    end
+    start_at = 1
+    while start_at < board[0].length - limit
+      j = 6; i = start_at
+      while j >= 0 && i < board.length
+        curr = board[i][j]
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+
+        j -= 1; i += 1
+      end
+      prev = ''; start_at += 1
+    end
+  end
+
   def check_board(board = @board)
     horizontal_check(board)
     vertical_check(board)
+    diagonal_check_left(board, 3)
   end
 
 end
