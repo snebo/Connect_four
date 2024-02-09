@@ -49,9 +49,7 @@ class ConnectFour
     welcome_message
     create_players
     while @playing
-      @won = false; break if yes_or_no('Keep playing(y,n)? ')
-
-      game_round
+      @won ? (break if yes_or_no('Keep playing(y,n)? ')) : game_round
     end
   end
 
@@ -272,8 +270,8 @@ class ConnectFour
         # print "#{board[i][j]} "
         current = board[i][j]
         if flag
-          if current == prev_value && !current.nil?
-            new_arr << current
+          if current == prev_value
+            new_arr << current unless current.nil?
           else
             new_arr = []
           end
@@ -292,7 +290,6 @@ class ConnectFour
         j -= 1
       end
       start_at += 1
-      # puts ''
     end
 
     i = 1
@@ -400,15 +397,45 @@ class ConnectFour
     name = gets.chomp
     puts "file has been saved as #{name}.json"
   end
+
+  def horizontal_check(board, new_arr = [], prev = '')
+    board.each_with_index do |_, i|
+      board[i].each do |val|
+        curr = val
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+      end
+      prev = ''
+    end
+  end
+
+  def vertical_check(board, new_arr = [], prev = '')
+    board.each_with_index do |_, i|
+      board[i].each_with_index do |_, j|
+        curr = board[j][i]
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+      end
+      prev = ''
+    end
+  end
+
+  def check_board(board = @board)
+    horizontal_check(board)
+    vertical_check(board)
+  end
+
 end
 
 game = ConnectFour.new
 # game.play
-board = [['a', 3, 5, 2, 5, 6, 9],
-         [5, 'c', 8, 9, 3, 9, 6],
-         [2, 2, 'a', 6, 9, 1, 's'],
-         [2, 3, 2, 'a', 1, 3, '3'],
-         [2, 2, 11, 12, 11, 11, 22],
-         [2, 2, 5, 2, 2, 6, 9],
-         [1, 6, 8, 9, 3, 1, 6]]
-game.check_win?(board)
+x_board = [%w[@ @ # ^ & M A],
+           %w[A D @ B # A &],
+           %w[X O X $ M B &],
+           %w[@ @ # ^ & M A],
+           %w[A D @ B # A &],
+           %w[X O X $ M B &],
+           %w[@ @ # ^ & M A]]
+game.check_board(x_board)
