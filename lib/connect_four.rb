@@ -1,40 +1,19 @@
 # frozen_string_literal: true
 
-# FIXME: fix why the game returns win on ever play
-# TODO: change the Connectfour logic.
-# The way the game works is that the connect four is dropped in and drops to the
-# bottom of the board
-
 require_relative './player'
 
 # ConnectFour four constructor class
 class ConnectFour
   def initialize
     @board = Array.new(7) { Array.new(7) }
-    @player1
-    @player2
+    @player1 = nil
+    @player2 = nil
     @turn = false
     @playing = true
     @won = false
   end
 
   def draw_board(board = @board)
-    #   -----------------------------
-    # f |   |   |   |   |   |   |   |
-    #   -----------------------------
-    # e |   |   |   |   |   |   |   |
-    #   -----------------------------
-    # d |   |   |   |   |   |   |   |
-    #   -----------------------------
-    # c |   |   |   |   |   |   |   |
-    #   -----------------------------
-    # b |   |   |   |   |   |   |   |
-    #   -----------------------------
-    # a |   |   |   |   |   |   |   |
-    #   -----------------------------
-    #     1   2   3   4   5   6   7
-
-    # each spot is a 2d array, and is filled when the value is not nil
     system('clc') || system('clear')
     print "\n#{@player1.name}: #{@player1.score} ===========    "
     print "#{@player2.name}: #{@player2.score}\n\n"
@@ -44,7 +23,7 @@ class ConnectFour
     puts line
     row_count.each_with_index do |_, idx|
       print row_count[idx]
-      board.each_with_index { |val2, idx2| board[idx][idx2].nil? ? print(' |  ') : print(" | #{board[idx][idx2]}") }
+      board.each_with_index { |_, idx2| board[idx][idx2].nil? ? print(' |  ') : print(" | #{board[idx][idx2]}") }
       print " |\n #{line}\n"
     end
     puts col_count
@@ -59,7 +38,7 @@ class ConnectFour
     loop do
       print "#{question}: "
       response = gets.chomp.downcase.split('')
-      break if (response & ['y','n']).any?
+      break if (response & %w[y n]).any?
 
       puts 'Not a valid response'
     end
@@ -70,10 +49,8 @@ class ConnectFour
     welcome_message
     create_players
     while @playing
-      if @won
-        yes_or_no('Keep playing(y,n)? ') ? break : nil
-      @won = false
-      end
+      @won = false; break if yes_or_no('Keep playing(y,n)? ')
+
       game_round
     end
   end
@@ -84,7 +61,7 @@ class ConnectFour
     name1 = gets.chomp
     setsym = yes_or_no("\nDo you have a custom symbol (y,n)")
     if setsym
-      print "Enter your custom symbol: "
+      print 'Enter your custom symbol: '
       sym1 = gets.chomp
     else
       sym1 = choose_sym
@@ -117,37 +94,51 @@ class ConnectFour
     # should change the value into an array
     # store that as player position and update board
 
-    # convert into array of numbers
+    # # convert into array of numbers
     choice = convert_choice(choice)
     # update board
-    @board[choice[0]] [choice[1]] = player.symbol
+    update_board(choice, player)
     # check win
-    check_win? ? @won = true : @won = false
+    @won = check_win? ? true : false
+  end
+
+  def update_board(choice, player)
+    while choice[0] < 5 && @board[choice[0] + 1][choice[1]].nil?
+      # why does this ignore nil values?????
+      choice[0] += 1
+    end
+    @board[choice[0]][choice[1]] = player.symbol
   end
 
   def check_win?(board = @board)
+    puts 'checking'
     # check win dioganally, horizontally, vertically
     new_arr = []
     flag = false
     prev_value = ''
-    for i in 0..6
-      for j in 0..6
+
+    board.each_with_index do |_, i|
+      board[i].each do |val|
+        curr = val
         if flag
-          if board[i][j] == prev_value && !board[i][j].nil?
-            new_arr << board[i][j]
+          if curr == prev_value && !curr.nil?
+            new_arr << curr
           else
             new_arr = []
+            # new_arr << curr
           end
         else
-          new_arr << board[i][j]
+          prev_value = curr
+          new_arr << curr
           flag = true
         end
-        if new_arr.length >= 4
+        if new_arr.length == 4
+          puts new_arr
           puts 'horizontal check'
           puts 'round win!!!'
           return true
         end
-        prev_value = board[i][j]
+        prev_value = curr
       end
       flag = false
     end
@@ -156,31 +147,35 @@ class ConnectFour
     flag = false
     prev_value = ''
     new_arr = []
-    for i in 0..6
-      for j in 0..6
+
+    board.each_with_index do |_, i|
+      board[i].each_with_index do |_,j|
+        curr = board[j][i]
         if flag
-          if board[j][i] == prev_value && !board[j][i].nil?
-            new_arr << board[j][i]
+          if curr == prev_value && !curr.nil?
+            new_arr.push(curr)
           else
             new_arr = []
+            new_arr << curr
           end
         else
-          new_arr << board[j][i]
+          new_arr << curr
           flag = true
         end
         if new_arr.length >= 4
+          p new_arr
           puts 'vertical check'
           puts 'round win!!!'
           return true
         end
-        prev_value = board[j][i]
+        prev_value = curr
       end
       flag = false
     end
 
     # diagonal check
-    traverse_board_diagonal_left? ? (return true) : nil
-    traverse_board_diagonal_right? ? (return true): nil
+    traverse_board_diagonal_left?(board) ? (return true) : nil
+    traverse_board_diagonal_right?(board) ? (return true): nil
 
     false
   end
@@ -197,15 +192,16 @@ class ConnectFour
     while i >= 0
       j = 0
       k = i
-      while j < row && (k < col) 
+      while j < row && (k < col)
         # print(" #{board[j][k]}")
         # add to array
         current = board[j][k]
         if flag
-          if current == prev_value && !board[j][k].nil?
+          if current == prev_value.to_s && !board[j][k].nil?
             new_arr << current
           else
             new_arr = []
+            # new_arr << current
           end
         else
           new_arr << current
@@ -234,7 +230,11 @@ class ConnectFour
         # print(" #{board[j][k]}")
         current = board[j][k]
         if flag
-          current == prev_value && !board[j][k].nil? ? new_arr << current : new_arr = []
+          if current == prev_value && !board[j][k].nil?
+            new_arr << current
+          else
+            new_arr = []
+          end
         else
           new_arr << current
           flag = true
@@ -260,19 +260,19 @@ class ConnectFour
     # getting the size of the matrix
     row = board.length
     col = board[0].length
-    i = 3
+    start_at = 3
     new_arr = []
     prev_value = ''
     flag = false
 
-    while i < col
-      j = i
-      while j >= 0 && (i - j < row) 
-        # print(" #{board[i-j][j]}")
-        # add to array
-        current = board[i-j][j]
+    while start_at < col
+      j = start_at
+      i = 0
+      while i < row && j >= 0
+        # print "#{board[i][j]} "
+        current = board[i][j]
         if flag
-          if current == prev_value && !board[i-j][j].nil?
+          if current == prev_value && !current.nil?
             new_arr << current
           else
             new_arr = []
@@ -282,17 +282,17 @@ class ConnectFour
           flag = true
         end
         if new_arr.length >= 4
+          puts new_arr
           puts 'diagonal left check'
           puts 'round win!!!'
           return true
         end
         prev_value = current
+        i += 1
         j -= 1
       end
-      # puts "\nnew_arr = #{new_arr}"
+      start_at += 1
       # puts ''
-      flag = false
-      i += 1
     end
 
     i = 1
@@ -303,7 +303,12 @@ class ConnectFour
         # print(" #{board[k][j]}")
         current = board[k][j]
         if flag
-          current == prev_value && !board[k][j].nil? ? new_arr << current : new_arr = []
+          if current == prev_value && !board[k][j].nil?
+            new_arr << current
+          else
+            new_arr = []
+            new_arr.push(current)
+          end
         else
           new_arr << current
           flag = true
@@ -314,7 +319,7 @@ class ConnectFour
           return true
         end
         # set next iteration
-        prev_value = board[k][j]
+        prev_value = current
         j -= 1
         k += 1
       end
@@ -343,9 +348,7 @@ class ConnectFour
       choice = choice.split('')
       if choice[0].match?(/[a-f]/) && choice[1].match?(/[1-7]/)
         check = convert_choice(choice)
-        if @board[check[0]][check[1]].nil?
-          break
-        end
+        break if @board[check[0]][check[1]].nil?
       end
     end
     choice
@@ -353,53 +356,59 @@ class ConnectFour
   
   def load_game
     list = Dir['save_files/*']
-    list.each {|i| i.gsub!('.json', '').gsub!('save_files/', '')}
+    list.each { |i| i.gsub!('.json', '').gsub!('save_files/', '') }
     puts list
 
     print "\nEnter the name of your save: "
     save_file = gets.chomp
     file_path = "save_files/#{save_file}.json"
-    if File.exist?(file_path)
-      save = File.read(file_path)
-      info = JSON.phrase(save)
-      @player1.name = info[]
-      @player1.symbol = info[]
-      @player1.score = info[]
-      @player1.positions = inof[]
+    return 'file not found' if File.exist?(file_path)
 
-      @turn = info[turn]
+    save = File.read(file_path)
+    info = JSON.phrase(save)
+    @player1.name = info[]
+    @player1.symbol = info[]
+    @player1.score = info[]
+    @player1.positions = inof[]
 
-      puts "Welcom back #player_one and #player_two\n"
-    end
+    @turn = info[turn]
+
+    puts "Welcom back #player_one and #player_two\n"
   end
 
   def save_game
     game_name = save_name
-    info = JSON.dump({
-      name1: @player1.name,
-      symbol1: @player1.symbol,
-      score1: @player1.score,
-      positions1: @player1.positions,
+    info = JSON.dump({  name1: @player1.name,
+                        symbol1: @player1.symbol,
+                        score1: @player1.score,
+                        positions1: @player1.positions,
 
-      name2: @player2.name,
-      symbol2: @player2.symbol,
-      score2: @player2.score,
-      positions2: @player2.positions,
+                        name2: @player2.name,
+                        symbol2: @player2.symbol,
+                        score2: @player2.score,
+                        positions2: @player2.positions,
 
-      board: @board
-    })
+                        board: @board })
     Dir.mkdir('save_files') unless Dir.exist?('save_files')
-    File.open("./save_files/#{game_name}.json",'w') do |f|
+    File.open("./save_files/#{game_name}.json", 'w') do |f|
       f.puts info
     end
   end
 
   def save_name
-    puts "\nEnter a name for your save"
+    puts "\nEnter a name for your save: "
     name = gets.chomp
-    name
+    puts "file has been saved as #{name}.json"
   end
 end
 
 game = ConnectFour.new
-game.play
+# game.play
+board = [['a', 3, 5, 2, 5, 6, 9],
+         [5, 'c', 8, 9, 3, 9, 6],
+         [2, 2, 'a', 6, 9, 1, 's'],
+         [2, 3, 2, 'a', 1, 3, '3'],
+         [2, 2, 11, 12, 11, 11, 22],
+         [2, 2, 5, 2, 2, 6, 9],
+         [1, 6, 8, 9, 3, 1, 6]]
+game.check_win?(board)
