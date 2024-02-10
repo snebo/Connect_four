@@ -49,7 +49,11 @@ class ConnectFour
     welcome_message
     create_players
     while @playing
-      @won ? (break if yes_or_no('Keep playing(y,n)? ')) : game_round
+      if @won
+        yes_or_no('Keep playing (y,n)?: ') ? @won = false : @playing = false
+        @board = Array.new(7) { Array.new(7) } # reset board
+      end
+      game_round
     end
   end
 
@@ -97,7 +101,8 @@ class ConnectFour
     # update board
     update_board(choice, player)
     # check win
-    @won = check_win? ? true : false
+    puts check_board?(@board)
+    @won = check_board? ? true : false
   end
 
   def update_board(choice, player)
@@ -106,226 +111,6 @@ class ConnectFour
       choice[0] += 1
     end
     @board[choice[0]][choice[1]] = player.symbol
-  end
-
-  def check_win?(board = @board)
-    puts 'checking'
-    # check win dioganally, horizontally, vertically
-    new_arr = []
-    flag = false
-    prev_value = ''
-
-    board.each_with_index do |_, i|
-      board[i].each do |val|
-        curr = val
-        if flag
-          if curr == prev_value && !curr.nil?
-            new_arr << curr
-          else
-            new_arr = []
-            # new_arr << curr
-          end
-        else
-          prev_value = curr
-          new_arr << curr
-          flag = true
-        end
-        if new_arr.length == 4
-          puts new_arr
-          puts 'horizontal check'
-          puts 'round win!!!'
-          return true
-        end
-        prev_value = curr
-      end
-      flag = false
-    end
-
-    # vertically
-    flag = false
-    prev_value = ''
-    new_arr = []
-
-    board.each_with_index do |_, i|
-      board[i].each_with_index do |_,j|
-        curr = board[j][i]
-        if flag
-          if curr == prev_value && !curr.nil?
-            new_arr.push(curr)
-          else
-            new_arr = []
-            new_arr << curr
-          end
-        else
-          new_arr << curr
-          flag = true
-        end
-        if new_arr.length >= 4
-          p new_arr
-          puts 'vertical check'
-          puts 'round win!!!'
-          return true
-        end
-        prev_value = curr
-      end
-      flag = false
-    end
-
-    # diagonal check
-    traverse_board_diagonal_left?(board) ? (return true) : nil
-    traverse_board_diagonal_right?(board) ? (return true): nil
-
-    false
-  end
-
-  def traverse_board_diagonal_right?(board = @board)
-    # define the size of the matrix
-    row = board.length
-    col = board[0].length
-    i = 3
-    new_arr = []
-    prev_value = ''
-    flag = false
-
-    while i >= 0
-      j = 0
-      k = i
-      while j < row && (k < col)
-        # print(" #{board[j][k]}")
-        # add to array
-        current = board[j][k]
-        if flag
-          if current == prev_value.to_s && !board[j][k].nil?
-            new_arr << current
-          else
-            new_arr = []
-            # new_arr << current
-          end
-        else
-          new_arr << current
-          flag = true
-        end
-        if new_arr.length >= 4
-          puts 'diagonal right check'
-          puts 'round win!!!'
-          return true
-        end
-        prev_value = current
-        j += 1
-        k += 1
-      end
-      # puts "\nnew_arr = #{new_arr}"
-      # puts ''
-      flag = false
-      i -= 1
-    end
-
-    i = 3 # where the valid count starts
-    while i.positive?
-      j = i
-      k = 0
-      while j < row && k < col
-        # print(" #{board[j][k]}")
-        current = board[j][k]
-        if flag
-          if current == prev_value && !board[j][k].nil?
-            new_arr << current
-          else
-            new_arr = []
-          end
-        else
-          new_arr << current
-          flag = true
-        end
-        if new_arr.length == 4
-          puts 'diagonal right 2 check'
-          puts 'round win!!'
-        end
-        # set next iteration
-        prev_value = current
-        j += 1
-        k += 1
-      end
-      # puts "\nnew_arr = #{new_arr}"
-      # puts ''
-      flag = false
-      i -= 1
-    end
-    false
-  end
-
-  def traverse_board_diagonal_left?(board = @board)
-    # getting the size of the matrix
-    row = board.length
-    col = board[0].length
-    start_at = 3
-    new_arr = []
-    prev_value = ''
-    flag = false
-
-    while start_at < col
-      j = start_at
-      i = 0
-      while i < row && j >= 0
-        # print "#{board[i][j]} "
-        current = board[i][j]
-        if flag
-          if current == prev_value
-            new_arr << current unless current.nil?
-          else
-            new_arr = []
-          end
-        else
-          new_arr << current
-          flag = true
-        end
-        if new_arr.length >= 4
-          puts new_arr
-          puts 'diagonal left check'
-          puts 'round win!!!'
-          return true
-        end
-        prev_value = current
-        i += 1
-        j -= 1
-      end
-      start_at += 1
-    end
-
-    i = 1
-    while i < row - 3
-      j = col - 1
-      k = i
-      while j.positive? && k < row
-        # print(" #{board[k][j]}")
-        current = board[k][j]
-        if flag
-          if current == prev_value && !board[k][j].nil?
-            new_arr << current
-          else
-            new_arr = []
-            new_arr.push(current)
-          end
-        else
-          new_arr << current
-          flag = true
-        end
-        if new_arr.length == 4
-          puts 'diagonal left 2 check'
-          puts 'round win!!!'
-          return true
-        end
-        # set next iteration
-        prev_value = current
-        j -= 1
-        k += 1
-      end
-      # puts "\nnew_arr = #{new_arr}"
-      # puts ''
-      flag = false
-      i += 1
-    end
-    false
   end
 
   def convert_choice(value)
@@ -402,24 +187,28 @@ class ConnectFour
     board.each_with_index do |_, i|
       board[i].each do |val|
         curr = val
+        next if curr.nil? # added
         curr == prev ? new_arr << curr : new_arr.clear.push(curr)
         prev = curr
         return true if new_arr.length == 4
       end
       prev = ''
     end
+    false
   end
 
   def vertical_check(board, new_arr = [], prev = '')
     board.each_with_index do |_, i|
       board[i].each_with_index do |_, j|
         curr = board[j][i]
+        next if curr.nil? # added
         curr == prev ? new_arr << curr : new_arr.clear.push(curr)
         prev = curr
         return true if new_arr.length == 4
       end
       prev = ''
     end
+    false
   end
 
   def diagonal_check_left(board, limit, new_arr = [], prev = '')
@@ -428,8 +217,10 @@ class ConnectFour
       i = 0; j = start_at
       while i < board.length && j >= 0
         curr = board[i][j]
-        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
-        prev = curr
+        if !curr.nil?
+          curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+          prev = curr
+        end
         return true if new_arr.length == 4
 
         i += 1; j -= 1
@@ -441,27 +232,30 @@ class ConnectFour
       j = 6; i = start_at
       while j >= 0 && i < board.length
         curr = board[i][j]
-        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
-        prev = curr
+        if !curr.nil?
+          curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+          prev = curr
+        end
         return true if new_arr.length == 4
 
         j -= 1; i += 1
       end
       prev = ''; start_at += 1
     end
+    false
   end
 
   def diagonal_check_right(board, limit, new_arr = [], prev = '')
-    #  i  j
-    # [3][0], [2][1]
     start_at = limit
     while start_at >= 0
       i = start_at
       j = 0
       while j < board[0].length && i < board.length
         curr = board[i][j]
-        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
-        prev = curr
+        if !curr.nil?
+          curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+          prev = curr
+        end
         return true if new_arr.length == 4
 
         j += 1; i += 1
@@ -474,34 +268,36 @@ class ConnectFour
       i = 0; j = start_at
       while j < board.length
         curr = board[i][j]
-        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
-        prev = curr
+        if !curr.nil?
+          curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+          prev = curr
+        end
         return true if new_arr.length == 4
-        
+
         i += 1; j += 1
       end
       prev = ''; start_at += 1
     end
+    false
   end
 
-  def check_board(board = @board)
-    horizontal_check(board)
-    vertical_check(board)
-    diagonal_check_left(board, 3)
-    diagonal_check_right(board, 3)
+  def check_board?(board = @board)
+    check = [horizontal_check(board),
+             vertical_check(board),
+             diagonal_check_left(board, 3),
+             diagonal_check_right(board, 3)]
+    check.any?
   end
-
 end
 
 game = ConnectFour.new
-# game.play
-x_board = [%w[@ @ # ^ & M A],
-           %w[A D @ B # A &],
-           %w[X O X $ M B &],
-           %w[@ @ # ^ & M A],
-           %w[A D @ B # A &],
-           %w[X O X $ M B &],
-           %w[@ @ # ^ & M A]]
-#  i  j
-# [0][1], [1][2]
-game.check_board(x_board)
+game.play
+# x_board = [[1,3,5,6,7,8,3],
+#            [2,5,7,3,5,1,6],
+#            [7,1,7,7,8,2,1],
+#            [7,3,5,6,7,7,3],
+#            [2,5,7,3,7,1,6],
+#            [5,3,7,5,8,2,1],
+#            [5,3,7,7,8,2,1]]
+
+# game.check_board?
