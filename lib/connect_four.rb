@@ -422,7 +422,7 @@ class ConnectFour
     end
   end
 
-  def diagonal_check_left(board, limit = 3, new_arr = [], prev = '')
+  def diagonal_check_left(board, limit, new_arr = [], prev = '')
     start_at = limit
     while start_at < board[0].length
       i = 0; j = start_at
@@ -431,7 +431,7 @@ class ConnectFour
         curr == prev ? new_arr << curr : new_arr.clear.push(curr)
         prev = curr
         return true if new_arr.length == 4
-        
+
         i += 1; j -= 1
       end
       prev = ''; start_at += 1
@@ -451,10 +451,44 @@ class ConnectFour
     end
   end
 
+  def diagonal_check_right(board, limit, new_arr = [], prev = '')
+    #  i  j
+    # [3][0], [2][1]
+    start_at = limit
+    while start_at >= 0
+      i = start_at
+      j = 0
+      while j < board[0].length && i < board.length
+        curr = board[i][j]
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+
+        j += 1; i += 1
+      end
+      prev = ''; start_at -= 1
+    end
+
+    start_at = 1
+    while start_at < board[0].length - limit
+      i = 0; j = start_at
+      while j < board.length
+        curr = board[i][j]
+        curr == prev ? new_arr << curr : new_arr.clear.push(curr)
+        prev = curr
+        return true if new_arr.length == 4
+        
+        i += 1; j += 1
+      end
+      prev = ''; start_at += 1
+    end
+  end
+
   def check_board(board = @board)
     horizontal_check(board)
     vertical_check(board)
     diagonal_check_left(board, 3)
+    diagonal_check_right(board, 3)
   end
 
 end
@@ -468,4 +502,6 @@ x_board = [%w[@ @ # ^ & M A],
            %w[A D @ B # A &],
            %w[X O X $ M B &],
            %w[@ @ # ^ & M A]]
+#  i  j
+# [0][1], [1][2]
 game.check_board(x_board)
