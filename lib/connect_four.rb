@@ -297,5 +297,5 @@ class ConnectFour
 end
 
 # uncomment next two lines to play
-# game = ConnectFour.new
-# game.play
+game = ConnectFour.new
+game.play
